@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Sentiment Analysis</title>
+    <style>
+        body {
+            background-color: #ffffff;
+            font-family: Arial, sans-serif;
+            color: #00008b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            width: 90%; /* Makes the container 90% of the screen width */
+            margin-top: 10px; /* Adjust this value based on the height of your header */
+            height: 85vh; /* Adjust this value based on your needs */
+			overflow-y: auto; /* Adds vertical scrolling */
+        }
+        button {
+            background-color: #0000ff;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 2px solid #00008b;
+            border-radius: 4px;
+        }
+		.input-group {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			position: fixed; /* Makes the input-group stay in a fixed position */
+			bottom: 0; /* Positions the input-group at the bottom of the screen */
+			width: 90%; /* Makes the input-group span the full width of the screen */
+		}
+		.input-group input[type="text"] {
+			flex-grow: 1;
+		}
+		.input-group button {
+			margin-left: 10px;
+        }
+        #headr {
+		    position: fixed;
+		    top: 0;
+			left: 50%;
+			transform: translateX(-50%);
+		    z-index: 100;
+		}
+        #chat {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; /* Aligns the user messages to the right */
+            overflow-y: scroll; /* Add this line to enable vertical scrolling */
+			max-height: 480px; /* Set a maximum height for the chat container */
+
+        }
+        .user, .assistant {
+            border-radius: 20px; /* Creates the bubble effect */
+            padding: 10px; /* Adds some space around the text */
+            margin-bottom: 10px; /* Adds some space between messages */
+            width: fit-content; /* Makes the div only as wide as the content */
+        }
+        .user {
+            background-color: #add8e6; /* Light blue */
+        }
+        .assistant {
+            background-color: #90ee90; /* Light green */
+            align-self: flex-start; /* Aligns the assistant messages to the left */
+        }
+    </style>
+    <script type="module">
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
+
+        async function getSentiment() {
+
+            // Get the input text
+            let text = document.getElementById('textInput').value;
+
+			// Check if the text is blank
+			if (text.trim() === '') {
+				return;
+            }
+
+            // Create a sentiment analysis pipeline
+            let sentimentAnalysis = await pipeline('sentiment-analysis');
+
+            // Use the pipeline to get the sentiment of the input text
+            let result = await sentimentAnalysis(text);
+
+			// Convert the score to a percentage with 2 decimal places
+            let scorePercentage = (result[0].score * 100).toFixed(2);
+
+            // Create a new div for the user input
+            let userInputDiv = document.createElement('div');
+            userInputDiv.className = 'user';
+            userInputDiv.innerText = 'User: ' + text;
+            document.getElementById('chat').appendChild(userInputDiv);
+
+
+            // Create a new div for the result
+            let resultDiv = document.createElement('div');
+            resultDiv.className = 'assistant';
+            resultDiv.innerText = 'Assistant: ' + result[0].label + ' sentiment, Score: ' + scorePercentage + '%';
+
+            document.getElementById('chat').appendChild(resultDiv);
+
+
+            const chatContainer = document.getElementById('chat');
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Clear the input field
+            document.getElementById('textInput').value = '';
+
+        }
+
+        window.getSentiment = getSentiment;
+
+        window.onload = function() {
+            // Add an event listener for the 'keypress' event on the input field
+            document.getElementById('textInput').addEventListener('keypress', function(event) {
+                // If the key pressed is 'Enter', call the getSentiment function
+                if (event.key === 'Enter') {
+                    getSentiment();
+
+                }
+            });
+        };
+
+
+    </script>
+</head>
+<body>
+    <div id="headr"><h1>Chat Sentiments</h1></div>
+    <div class="container">
+        <div id="chat"></div>
+        <div class="input-group">
+            <input type="text" id="textInput" placeholder="Enter text here">
+            <button onclick="getSentiment()" align="right">Send</button>
+        </div>
+    </div>
+
+</html>
